@@ -70,7 +70,7 @@
         <span
           class="inline-block rounded-xl border border-slate-700 bg-slate-800 px-3 py-1 font-semibold"
         >
-          $0.00
+          € {{ '%.2f'|format(total or 0) }}
         </span>
       </div>
 
@@ -113,6 +113,7 @@
             <span class="mb-1 block text-slate-300">Date</span>
             <input
               name="date"
+              value="{{today}}"
               type="date"
               class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100"
             />
