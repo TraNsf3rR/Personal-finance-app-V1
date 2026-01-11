@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, url_for, make_response, flash, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
-from datetime import date, datetime
+from datetime import date, datetime as dt_date
 from sqlalchemy import func
 
 app = Flask(__name__)
@@ -150,6 +150,19 @@ def delete(expense_id):
     db.session.commit()
     flash("Expense deleted", "success")
     return redirect(url_for("index"))
+
+# EDIT expense
+@app.route('/edit/<int:expense_id>', methods=['GET'])
+def edit(expense_id):
+    e = Expense.query.get_or_404(expense_id)
+
+    return render_template(
+        "edit.html", 
+        
+        expense = e,
+        categories = CATEGORIES,
+        today = dt_date.today().isoformat()
+        )
 
 # EXPORT in csv
 @app.route("/export.csv")
