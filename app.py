@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, make_response, flash, redirect
+from flask import Flask, render_template, request, url_for, make_response, flash, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date, datetime
 from sqlalchemy import func
@@ -91,6 +91,7 @@ def index():
     day_labels = [d.isoformat() for d, _ in day_rows]
     day_values = [round(float(s or 0), 2) for _, s in day_rows]
 
+    # Must contain all that needs to be sent to front-end
     return render_template(
         "index.html",
 
@@ -107,7 +108,7 @@ def index():
         day_values = day_values
         )
 
-
+# ADD expense
 @app.route("/add", methods=['POST'])
 def add():
 
@@ -141,6 +142,7 @@ def add():
     flash("Expense added", "success")
     return redirect(url_for("index"))
 
+# DELETE expense
 @app.route('/delete/<int:expense_id>', methods=['POST'])
 def delete(expense_id):
     e = Expense.query.get_or_404(expense_id)
@@ -149,5 +151,56 @@ def delete(expense_id):
     flash("Expense deleted", "success")
     return redirect(url_for("index"))
 
+# EXPORT in csv
+@app.route("/export.csv")
+def export_csv():
+
+    # 1.Read query string
+    
+    start_str = (request.args.get("start") or "").strip()
+    end_str = (request.args.get("end") or "").strip()
+    selected_category = (request.args.get("category") or "").strip()
+    
+    # 2.parsing
+    
+    start_date = parse_date_or_none(start_str)
+    end_date = parse_date_or_none(end_str)
+
+    q = Expense.query
+
+    if start_date:
+        q = q.filter(Expense.date >= start_date)
+    if end_date:
+        q = q.filter(Expense.date <= end_date)
+    if selected_category:
+        q = q.filter(Expense.category == selected_category)
+
+    expenses = q.order_by(Expense.date, Expense.id).all()
+    
+    # Create column names 
+    lines = ["date, description, category, amount"]
+
+    # Populate each row
+    for e in expenses:
+        lines.append(f"{e.date.isoformat()}, {e.description}, {e.category}, {e.amount:.2f}")
+    
+    # Go to next line
+    csv_data = "\n".join(lines)
+
+    # Name csv file
+    fname_start = start_str or "all"
+    fname_end = end_str or "all"
+    filename = f"expenses_{fname_start}_to_{fname_end}.csv"
+
+    # Make the actual csv file
+    return Response (
+        csv_data,
+        headers = {
+            "Content-Type": "text/csv",
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
 if __name__ == "__main__":
+
     app.run(debug=True)
