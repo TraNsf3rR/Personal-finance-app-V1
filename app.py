@@ -16,16 +16,27 @@ class Expense(db.Model):
     category = db.Column(db.String(50), nullable=False)
     date = db.Column(db.Date, nullable=False, default=date.today)
 
+
 with app.app_context():
     db.create_all()
+
+CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Health']
+
 
 
 @app.route("/")
 def index():
 
     expenses = Expense.query.order_by(Expense.date.desc(), Expense.id.desc()).all()
-    print(expenses)
-    return render_template("index.html", expenses=expenses)
+    total = round(sum(e.amount for e in expenses), 2)
+
+    return render_template(
+        "index.html",
+
+        expenses = expenses,
+        categories = CATEGORIES,
+        total = total
+        )
 
 
 @app.route("/add", methods=['POST'])

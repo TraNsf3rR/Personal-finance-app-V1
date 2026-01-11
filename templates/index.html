@@ -114,10 +114,11 @@
             name="category"
             class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-slate-100"
           >
-            <option>Food</option>
-            <option>Transport</option>
-            <option>Rent</option>
-            <option>Utilities</option>
+            {% for c in categories %}
+
+            <option value="{{c}}">{{c}}</option>
+            
+            {% endfor %}
           </select>
         </label>
         <button
@@ -136,7 +137,7 @@
     <span
       class="inline-block rounded-xl border border-slate-700 bg-slate-800 px-3 py-1 font-semibold"
     >
-      $0.00
+      € {{ '%.2f'|format(total or 0) }}
     </span>
   </div>
 
@@ -158,15 +159,13 @@
         </thead>
         <tbody>
 
-          {% if expenses %}
-
-          {% for e in expenses %}
+          {% if expenses %} {% for e in expenses %}
 
           <tr class="border-t border-slate-800 hover:bg-slate-800/30">
             <td class="px-4 py-2">{{e.date.strftime("%Y-%m-%d") if e.date else ''}}</td>
             <td class="px-4 py-2">{{e.description}}</td>
             <td class="px-4 py-2">{{e.category}}</td>
-            <td class="px-4 py-2 text-right">€{{ '%.2f'|format(e.amount) }}</td>
+            <td class="px-4 py-2 text-right">{{ '%.2f'|format(e.amount) }} €</td>
             <td class="px-4 py-2 text-right">
               <button
                 class="text-rose-300 hover:text-rose-200 text-xs border border-rose-400/30 px-3 py-1 rounded-lg"
@@ -175,7 +174,6 @@
               </button>
             </td>
           </tr>
-          
           {% endfor %}
 
           {% else %}        
