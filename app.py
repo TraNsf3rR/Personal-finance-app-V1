@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, url_for, make_response, flash, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
-from datetime import date, datetime as dt_date
+from datetime import date, datetime
 from sqlalchemy import func
 
 app = Flask(__name__)
@@ -151,7 +151,7 @@ def delete(expense_id):
     flash("Expense deleted", "success")
     return redirect(url_for("index"))
 
-# EDIT expense
+# EDIT expense (GET expense info)
 @app.route('/edit/<int:expense_id>', methods=['GET'])
 def edit(expense_id):
     e = Expense.query.get_or_404(expense_id)
@@ -161,8 +161,52 @@ def edit(expense_id):
         
         expense = e,
         categories = CATEGORIES,
-        today = dt_date.today().isoformat()
+        today = date.today().isoformat()
         )
+
+# EDIT expense (EDIT if all is valid)
+@app.route('/edit/<int:expense_id>', methods=['POST'])
+def edit_post(expense_id):
+    e = Expense.query.get_or_404(expense_id)
+
+    description = (request.form.get("description") or "").strip()
+    amount_str = (request.form.get("amount") or "").strip()
+    category = (request.form.get("category") or "").strip()
+    date_str = (request.form.get("date") or "").strip()
+
+    # Validate for non-empty fields
+    if not description or not amount_str or not category:
+        flash("Please fill description, amount and category", "error")
+        return redirect(url_for("edit", expense_id = expense_id))
+    
+    # Validate for positive values
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        flash("Amount must be a positive number", "error")
+        return redirect(url_for("edit", expense_id = expense_id))
+    
+    try:
+        # if date_str:
+        #     d = datetime.strptime(date_str, "%Y-%m-%d").date() 
+        # else:
+        #     d = date.today
+        
+        # Shorter Alternative:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else date.today()
+    except ValueError:
+        d = date.today()
+
+    e.description = description
+    e.amount = amount
+    e.category = category
+    e.date = d
+
+    db.session.commit()
+    flash("Expense updated", "success")
+    return redirect(url_for("index"))
 
 # EXPORT in csv
 @app.route("/export.csv")
