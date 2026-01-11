@@ -38,6 +38,7 @@ def index():
 # 1.Read query string
     start_str = (request.args.get("start") or "").strip()
     end_str = (request.args.get("end") or "").strip()
+    selected_category = (request.args.get("category") or "").strip()
 # 2.parsing
     start_date = parse_date_or_none(start_str)
     end_date = parse_date_or_none(end_str)
@@ -54,6 +55,10 @@ def index():
     if end_date:
         q = q.filter(Expense.date <= end_date)
 
+    if selected_category:
+        q = q.filter(Expense.category == selected_category)
+
+
     expenses = q.order_by(Expense.date.desc(), Expense.id.desc()).all()
     total = round(sum(e.amount for e in expenses), 2)
 
@@ -66,6 +71,7 @@ def index():
         total = total,
         start_str = start_str,
         end_str = end_str,
+        selected_category = selected_category,
         )
 
 
