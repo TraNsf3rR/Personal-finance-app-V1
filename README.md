@@ -1,3 +1,6 @@
+Personal finance app
+Python, Flask, Tailwind, Chart.js, SQLite
+
 For project to work:
 
 MUST-HAVE
